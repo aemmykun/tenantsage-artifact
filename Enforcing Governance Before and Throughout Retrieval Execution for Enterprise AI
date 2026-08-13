@@ -1,0 +1,332 @@
+Proposal: Enforcing Governance Before and Throughout Retrieval Execution for Enterprise AI
+
+Document Status: Architecture Proposal
+Evidence Status: Design specification—not implementation or certification evidence
+Version: 1.0
+Date: 13 August 2026
+
+Executive Summary
+
+Enterprise AI systems increasingly retrieve information from internal knowledge bases, document repositories, vector databases, APIs, and operational systems. Conventional retrieval architectures often depend on filters applied inside or after a search operation. This creates a material governance risk: information may enter the retrieval process before the system has established who is requesting it, under which authority, for what purpose, and within which policy boundary.
+
+This proposal introduces a deterministic governance execution boundary that operates before retrieval and remains binding throughout context construction, generation, disclosure, and action execution.
+
+The proposed architecture resolves verified authority, evaluates versioned governance rules, and creates a sealed Eligible Evidence Boundary before any retrieval begins. Retrieval is then restricted to that boundary and cannot expand it. Durable receipts and hash-bound evidence artifacts provide a reconstructable record of the decision and retrieval lifecycle.
+
+The objective is not to replace enterprise identity and access management, source-system authorization, vector databases, large language models, or existing retrieval systems. The objective is to govern how AI may retrieve, combine, infer from, generate from, disclose, or act upon enterprise information.
+
+Background
+
+Enterprise AI adoption introduces risks that conventional application authorization does not fully address.
+
+Security and isolation risks
+
+A user may be permitted to access individual records while still being prohibited from combining them, using them for a particular purpose, disclosing derived information, or instructing an AI system to act upon them.
+
+Application-level search filters alone are insufficient when alternative access paths—including administrative tools, caches, exports, batch jobs, agent tools, debugging interfaces, and database-owner connections—can bypass those filters.
+
+Governance timing gaps
+
+When governance is evaluated during or after retrieval, unauthorized information may already have entered application memory, logs, caches, prompts, traces, or model context.
+
+Post-retrieval filtering cannot reliably reverse that exposure.
+
+Incomplete decision evidence
+
+Many systems record only a final allow or deny outcome. They do not retain sufficient evidence to reconstruct:
+
+* which identity and authority state were evaluated;
+* which policy version was applied;
+* which evidence boundary was approved;
+* which records or chunks were retrieved;
+* whether the decision remained fresh throughout execution; or
+* whether the resulting output passed validation before disclosure or action.
+
+Operational inconsistency
+
+Where each application or retrieval connector implements governance independently, equivalent requests may produce different outcomes. This weakens enforcement consistency, auditability, and change control.
+
+Problem Statement
+
+Traditional retrieval-augmented generation architectures commonly treat governance as an external filter or a post-processing step. This creates several failure modes:
+
+* retrieval begins before identity, authority, and active scope are established;
+* customer or scope identifiers are accepted directly from untrusted client input;
+* policy decisions are not bound to a versioned authority and policy state;
+* retrieval systems can expand the approved search boundary;
+* stale decisions remain usable after authority or policy changes;
+* audit records are written after execution or on a best-effort basis;
+* retrieved evidence cannot be reliably linked to the decision that permitted it;
+* generation proceeds without a completed and verified retrieval receipt; and
+* model output is disclosed or executed without an independent validation stage.
+
+The required correction is to make governance a prerequisite for retrieval—not merely a function performed by the retrieval engine.
+
+Proposed Architecture
+
+The proposed control flow is:
+
+1. S0 — Request Ingress
+2. S1 — Deterministic Authority Resolution
+3. S2 — Governance Decision
+4. S3 — Eligible Evidence Boundary
+5. Durable PENDING Retrieval Receipt
+6. S4 — Retrieval Constrained by the EEB
+7. COMPLETED and Verified Retrieval Receipt
+8. S5 — Governed Context
+9. Junction Ledger Write-Ahead
+10. S6 — Generation
+11. S7 — Validation
+12. S8 — Execution or Disclosure
+
+Every stage operates fail-closed. Missing, invalid, expired, inconsistent, or unverifiable state results in a typed denial rather than an implied permission.
+
+S0 — Request Ingress
+
+Request ingress establishes a normalized request and correlation identifier. It records ingress metadata but does not determine authority or perform retrieval.
+
+Client-provided identity, customer, role, clearance, and scope claims must not be treated as authoritative without server-side verification.
+
+S1 — Deterministic Authority Resolution
+
+The authority resolver consumes identity verified by the enterprise identity provider and resolves the requester’s current authority.
+
+The resulting Authority Snapshot includes:
+
+* principal identity;
+* customer isolation boundary;
+* explicit active scope;
+* applicable assignments;
+* roles;
+* effective time constraints; and
+* a deterministic authority-state hash.
+
+The customer identifier is a hard-isolation boundary, not a node within the scope hierarchy. The active scope must be explicitly selected and validated. Missing or ambiguous authority results in denial.
+
+TenantSage does not replace IAM or source-system authorization. It consumes verified identity and authority inputs and converts them into a deterministic snapshot for downstream governance.
+
+S2 — Governance Decision
+
+The governance engine evaluates the requested action, purpose, environment, target resource, authority snapshot, and applicable versioned policy.
+
+The decision may evaluate:
+
+* role eligibility;
+* classification ceiling;
+* temporal validity;
+* retention requirements;
+* legal-hold constraints;
+* purpose limitations;
+* source-type restrictions;
+* topic restrictions;
+* approval requirements; and
+* disclosure or execution constraints.
+
+Deny rules take precedence. Exceptions cannot suppress or convert a denial into an allow decision.
+
+The decision is bound to the applicable authority-state hash, policy-state hash, and governance hash.
+
+S3 — Eligible Evidence Boundary
+
+An Eligible Evidence Boundary defines the maximum evidence set that retrieval may examine.
+
+A sealed EEB should include, at minimum:
+
+* authority snapshot hash;
+* current authority-state hash;
+* policy snapshot hash;
+* governance hash;
+* customer boundary;
+* active scope identifier;
+* allowed scope identifiers;
+* allowed source types;
+* allowed topic keys;
+* classification ceiling;
+* retention constraints;
+* legal-hold constraints;
+* approval requirements;
+* creation and expiry timestamps; and
+* a deterministic EEB hash.
+
+The retrieval system may narrow this boundary but must never expand it.
+
+No valid authority, governance decision, or sealed EEB means no retrieval.
+
+Receipt-Gated Retrieval
+
+Before retrieval begins, the system must durably commit a PENDING retrieval receipt bound to the request, query hash, and EEB hash.
+
+The receipt follows a controlled state transition:
+
+PENDING → COMPLETED | REJECTED
+
+A timed-out or interrupted operation transitions to ABANDONED through a defined recovery process.
+
+Retrieval may begin only after the PENDING receipt has been committed successfully. Governed context construction and generation may begin only after the receipt reaches COMPLETED state and passes verification.
+
+Absence of durable evidence is treated as a denial.
+
+S4 — Governed Retrieval
+
+The retrieval runtime—such as TenantSage TrustRAG or an enterprise’s existing RAG system—executes within the sealed EEB.
+
+It must enforce:
+
+* the customer isolation boundary;
+* approved scopes and sources;
+* classification restrictions;
+* temporal and retention conditions;
+* applicable legal-hold rules;
+* source publication state; and
+* the exact EEB referenced by the receipt.
+
+Retrieval results are bound to evidence identifiers, a query hash, retrieval hash, retrieval timestamp, and EEB hash.
+
+Chunks and other derived artifacts inherit governance authority from their authoritative parent source. They must not silently create or broaden independent permissions.
+
+S5–S8 — Context, Generation, Validation, and Execution
+
+Only evidence covered by a completed and verified retrieval receipt may enter governed context.
+
+Before generation, the system commits a junction ledger record binding the authority, policy, EEB, retrieval result, and governed context. If this write-ahead commitment fails, generation is denied.
+
+Generated output then passes through an independent validation stage. Validation may evaluate:
+
+* evidence grounding;
+* unsupported claims;
+* prohibited disclosure;
+* classification limits;
+* policy compliance;
+* required approvals; and
+* permitted execution scope.
+
+Only validated output may be disclosed or passed to an execution tool.
+
+No eligible evidence means no governed context.
+No governed context means no generation.
+No validated output means no execution.
+
+Legal-Hold Treatment
+
+Legal hold must not be represented as a universal search exclusion.
+
+A legal-hold state establishes preservation requirements and may restrict retrieval, use, transformation, disclosure, or deletion according to the applicable versioned policy.
+
+The system must therefore evaluate legal hold as an explicit governance constraint rather than assuming that all held information is either always permitted or always prohibited.
+
+Isolation and Defence in Depth
+
+Sandboxed retrieval workers and scoped credentials are useful controls, but they do not independently prove customer isolation.
+
+A production deployment should also include:
+
+* a non-owner runtime database role;
+* no BYPASSRLS privilege;
+* enabled and forced row-level security on protected tables;
+* trusted, transaction-scoped customer context;
+* deny-by-default tool and network access;
+* short-lived operation-scoped credentials;
+* append-only evidence records;
+* controlled administrative and debugging paths; and
+* negative tests covering cross-customer, cross-scope, stale-state, cache, export, batch, agent-tool, and privileged-role bypass attempts.
+
+Isolation claims must remain limited to the paths included in the declared threat model and verified deployment profile.
+
+Evidence and Audit Model
+
+The architecture produces reconstructable, tamper-evident evidence artifacts. Cryptographic signing may provide authenticity and integrity, while append-only storage and hash linking may reveal unauthorized modification.
+
+These properties must be described precisely:
+
+* Signed does not automatically mean immutable.
+* Hash-linked does not automatically mean independently anchored.
+* Append-only depends on storage permissions and administrative controls.
+* Externally verifiable requires published verification procedures, trusted keys, canonical serialization, and accessible evidence.
+* Audit-grade is an implementation and operational claim that requires testing and retained proof.
+
+This proposal defines the required architecture. It does not, by itself, demonstrate that a particular deployment enforces every control.
+
+Expected Benefits
+
+Reduced pre-generation exposure
+
+Governance is resolved before retrieval, reducing the risk that ineligible information enters prompts, caches, traces, or model context.
+
+Deterministic enforcement
+
+Equivalent inputs, authority state, policy state, and time conditions produce reproducible governance decisions.
+
+Bounded retrieval
+
+The EEB creates a verifiable maximum search boundary that downstream retrieval components cannot expand.
+
+Reconstructable evidence
+
+Hash-bound snapshots and receipts enable investigators to reconstruct which authority, policy, evidence boundary, and retrieval result supported an operation.
+
+Integration with existing enterprise systems
+
+The architecture can govern existing RAG platforms, vector databases, document repositories, APIs, agents, and models without requiring TenantSage to replace them.
+
+Support for compliance assessment
+
+The system can enforce declared controls and produce evidence for assessment. It does not automatically guarantee regulatory compliance, which also depends on organizational processes, legal interpretation, configuration, deployment, and continuing operation.
+
+Implementation Roadmap
+
+Phase 1 — Contracts and Threat Model
+
+Define stage contracts, trust boundaries, denial codes, canonical serialization, state transitions, freshness rules, administrative paths, and explicit security assumptions.
+
+Phase 2 — Authority and Policy Integration
+
+Integrate verified OIDC/JWKS identity, deterministic authority resolution, versioned policy snapshots, deny precedence, and fail-closed error handling.
+
+Phase 3 — EEB and Retrieval Enforcement
+
+Implement sealed EEBs, receipt-gated retrieval, source-authoritative permissions, bounded retrieval adapters, and database-level isolation controls.
+
+Phase 4 — Evidence Ledger and Verification
+
+Implement durable append-only records, hash linking, key management, signature verification, canonical artifact formats, replay procedures, and crash recovery.
+
+Phase 5 — Context, Generation, and Execution Controls
+
+Bind governed context to verified retrieval evidence, introduce junction write-ahead records, validate generated output, and constrain downstream actions.
+
+Phase 6 — Negative and Adversarial Testing
+
+Test cross-customer access, scope escalation, stale authority, policy changes, EEB expansion, receipt replay, partial failure, cache leakage, administrative bypass, and database-owner paths.
+
+Phase 7 — Pilot and Independent Assessment
+
+Conduct a controlled pilot in a defined operational environment. Measure denial correctness, decision latency, evidence completeness, recovery behavior, bypass resistance, and operational usability.
+
+Claims should advance from design specification to implemented control, tested enforcement, and independent verification only when supporting evidence exists.
+
+Limitations
+
+The proposed architecture does not:
+
+* replace enterprise IAM or source-system authorization;
+* determine whether an organization’s policies are legally sufficient;
+* guarantee compliance solely through technical controls;
+* make cryptographic artifacts immutable without protected storage;
+* prevent privileged infrastructure operators from causing harm unless privileged paths are included in the threat model and controlled;
+* guarantee model accuracy; or
+* prove production enforcement without implementation, configuration, testing, and operational evidence.
+
+Conclusion
+
+Enterprise AI requires more than post-retrieval filtering or model-level safety controls. Governance must establish the requester’s verified authority, evaluate the applicable policy, and seal the eligible evidence boundary before retrieval begins.
+
+Retrieval must remain constrained by that boundary. Context construction and generation must depend on completed, verified retrieval evidence, while disclosure and action must depend on independent validation.
+
+This creates an enforceable operating principle:
+
+No verified authority → no retrieval.
+No sealed eligible evidence boundary → no retrieval.
+No completed and verified retrieval receipt → no governed context or generation.
+No validated output → no disclosure or execution.
+
+The result is not an automatic compliance guarantee. It is a deterministic governance execution architecture designed to make enterprise AI decisions bounded, reconstructable, testable, and accountable.
