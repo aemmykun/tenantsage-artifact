@@ -1,0 +1,1739 @@
+TenantSage Product Blueprint and Business Plan
+
+1. Executive Summary
+
+TenantSage is an AI Governance Execution Platform and Authority Control Plane for enterprise AI systems.
+
+TenantSage does not replace identity providers, IAM, enterprise data platforms, vector databases, foundation models, or workflow systems. Instead, it sits between verified enterprise identity and data systems on one side, and AI applications, agents, MCP tools, and large language models on the other.
+
+Its purpose is to determine, enforce, and prove:
+
+* what an AI system is allowed to retrieve;
+* what evidence it may use;
+* what information it may combine or disclose;
+* what actions it may perform; and
+* why each decision was allowed or denied.
+
+The core commercial principle is:
+
+Decision Before Retrieval.
+
+Traditional RAG systems often perform search first and rely on filters during or after retrieval.
+
+TenantSage reverses this model:
+
+Identity
+   ↓
+Authority
+   ↓
+Governance Decision
+   ↓
+Eligible Evidence Boundary
+   ↓
+Governed Retrieval
+   ↓
+Context Admission
+   ↓
+Generation
+   ↓
+Validation
+   ↓
+Execution
+
+The customer does not buy individual technical packages such as authority, eeb, or receipts.
+
+The customer buys a visible and provable governance outcome.
+
+The primary commercial product is therefore:
+
+TenantSage Governance Gateway
+
+supported by:
+
+* TenantSage Console
+* TenantSage Evidence
+* TenantSage Conformance
+
+The underlying technologies—DAR, EEB, TrustRAG, deterministic policy evaluation, durable receipts, and evidence replay—remain internal platform capabilities.
+
+⸻
+
+2. Product Positioning
+
+Product Category
+
+AI Governance Execution Platform
+
+Alternative technical description:
+
+Authority and Evidence Control Plane for Enterprise AI
+
+Hero Product
+
+TenantSage Governance Gateway
+
+Hero Statement
+
+Control what enterprise AI is allowed to see, use, disclose and do — with evidence for every decision.
+
+Supporting Statement
+
+Pre-retrieval authority and evidence control for enterprise AI.
+
+TenantSage should not position itself primarily as:
+
+* a secure RAG platform;
+* a chatbot platform;
+* a vector database;
+* an IAM replacement;
+* an LLM gateway;
+* an AI monitoring product.
+
+Those categories either make the product unnecessarily broad or place it into crowded markets where its strongest differentiation becomes obscured.
+
+⸻
+
+3. Product Boundary
+
+TenantSage operates between existing enterprise systems and AI runtimes.
+
+Identity / IAM
+      │
+      ▼
+Enterprise Identity + Authority Inputs
+Enterprise Data / Knowledge Systems
+      │
+      ▼
+┌─────────────────────────────────────┐
+│             TENANTSAGE              │
+│                                     │
+│ Authority Resolution                │
+│ Governance Decisioning              │
+│ Eligible Evidence Boundary          │
+│ Governed Retrieval                  │
+│ Context Admission                   │
+│ Output Validation                   │
+│ Execution Control                   │
+│ Evidence / Receipts / Replay        │
+└─────────────────────────────────────┘
+      │
+      ▼
+LLM / Agent / MCP / Enterprise App
+
+The architectural ownership rule is:
+
+IAM proves identity.
+Enterprise systems own enterprise data.
+TenantSage owns:
+    authority interpretation
+    governance decisions
+    evidence eligibility
+    governed retrieval
+    context admission
+    output validation
+    execution authorization
+    decision proof
+LLMs and agents consume TenantSage decisions.
+They do not make those decisions.
+
+⸻
+
+4. Core Product Invariants
+
+The following rules form the product’s operational contract:
+
+No valid identity or authority
+    → no governed decision.
+No eligible evidence
+    → no retrieval.
+No durable retrieval admission
+    → no retrieval.
+No verified completed retrieval
+    → no governed context.
+No governed context
+    → no generation.
+No validated output
+    → no execution.
+No durable proof
+    → no successful governance claim.
+
+All failure paths must be explicit and fail closed.
+
+An error, missing state, stale policy, expired assignment, ambiguous scope, failed receipt write, or unverifiable evidence must never silently degrade into an allow decision.
+
+⸻
+
+5. Commercial Product Architecture
+
+TenantSage should expose four commercial products.
+
+5.1 TenantSage Gateway
+
+The Gateway is the primary enforcement product.
+
+It sits in front of enterprise AI applications, RAG systems, agents, and MCP tools.
+
+User / Agent
+      ↓
+TenantSage Gateway
+      ↓
+Authority
+      ↓
+Governance
+      ↓
+Eligible Evidence Boundary
+      ↓
+Governed Retrieval
+      ↓
+Validation
+      ↓
+LLM / MCP / Enterprise Application
+
+The Gateway answers operational questions such as:
+
+* Who initiated this request?
+* Which customer does the request belong to?
+* Which active scope applies?
+* Which authority assignment was used?
+* Which policy version was evaluated?
+* What classification ceiling applies?
+* Which evidence sources are eligible?
+* Which evidence was actually retrieved?
+* What information can be disclosed?
+* Which external actions are permitted?
+* Why was a request denied?
+* Can the decision later be reconstructed?
+
+The Gateway is the product that developers, CTOs, CISOs, and AI platform teams integrate directly.
+
+⸻
+
+6. TenantSage Console
+
+The Console converts internal governance decisions into a visible enterprise product.
+
+A single request should be inspectable as a complete decision record.
+
+Example:
+
+Request
+req_01J...
+Principal
+user@company.com
+Customer
+Acme Corporation
+Active Scope
+Melbourne Operations
+Decision
+DENY
+Reason
+CLASSIFICATION_DENIED
+Policy
+finance-prod-v17
+Authority State
+8bd01...
+Eligible Evidence Boundary
+eeb_5f12...
+Requested Evidence
+Payroll / Executive Compensation
+Eligible Evidence
+0 sources
+Receipt Status
+COMPLETED / DENIED
+Replay
+AVAILABLE
+
+The operator must be able to drill into:
+
+* principal;
+* authority;
+* scope;
+* policy;
+* governance constraints;
+* EEB;
+* source eligibility;
+* retrieved evidence;
+* provenance;
+* receipts;
+* execution decisions;
+* ledger events;
+* replay evidence.
+
+The Console turns TenantSage from a backend library into an operational governance product.
+
+⸻
+
+7. TenantSage Evidence
+
+TenantSage Evidence provides durable decision evidence.
+
+It includes:
+
+* request records;
+* authority snapshots;
+* governance snapshots;
+* policy versions;
+* EEB hashes;
+* query hashes;
+* retrieved evidence IDs;
+* evidence hashes;
+* retrieval receipts;
+* execution receipts;
+* canonical serialization;
+* ledger events;
+* replay artifacts.
+
+Receipts are not ordinary logs.
+
+They participate in the governance protocol.
+
+Core state machine:
+
+PENDING
+   │
+   ├── COMPLETED
+   ├── REJECTED
+   └── ABANDONED
+
+Operational requirements:
+
+No PENDING receipt
+    → no retrieval.
+No verified COMPLETED receipt
+    → no context or generation.
+Timeout
+    ≠ success.
+Crash
+    ≠ success.
+Missing completion evidence
+    → denial.
+
+The evidence system should be tamper-evident and operationally protected without making unsupported claims of absolute database immutability.
+
+⸻
+
+8. TenantSage Conformance
+
+Conformance converts governance architecture into verifiable engineering evidence.
+
+It should test whether the deployed system actually enforces its claimed controls.
+
+The product should generate a commit-bound conformance bundle containing:
+
+Application commit SHA
+Database migration SHA
+Ruleset / policy version
+Canonicalization vectors
+Positive tests
+Negative tests
+Bypass-path tests
+RLS evidence
+Receipt-state tests
+Replay tests
+Integrity evidence
+Deployment profile
+Threat-model version
+
+Conformance areas should include:
+
+Negative Tests
+
+* missing identity;
+* inactive identity;
+* wrong customer;
+* missing active scope;
+* unknown active scope;
+* ambiguous assignment;
+* expired assignment;
+* stale authority state;
+* stale policy state;
+* classification denial;
+* legal hold;
+* retention expiry;
+* approval requirement.
+
+Bypass Tests
+
+* normal runtime;
+* admin path;
+* debug path;
+* cache;
+* exports;
+* background jobs;
+* MCP;
+* agents;
+* database owner;
+* recovery paths.
+
+Proof Levels
+
+TenantSage should distinguish:
+
+1. Architectural Alignment
+2. Design Specification
+3. Implementation Proof
+4. Independent Assurance
+
+These levels must never be represented as interchangeable.
+
+⸻
+
+9. Internal Platform Architecture
+
+Commercial products are powered by one shared governance core.
+
+TenantSage Gateway
+       │
+       ├───────────────┬─────────────────┐
+       ▼               ▼                 ▼
+   Authority       Governance            EEB
+       │               │                 │
+       └───────────────┴─────────────────┘
+                       │
+                       ▼
+                    TrustRAG
+                       │
+                       ▼
+              Context Admission
+                       │
+                       ▼
+                   Generation
+                       │
+                       ▼
+                  Validation
+                       │
+                       ▼
+                  Execution
+                       │
+                       ▼
+              Evidence / Receipts
+                       │
+              ┌────────┴────────┐
+              ▼                 ▼
+           Console         Conformance
+
+⸻
+
+10. Canonical Runtime Stages
+
+S0 — Request Ingress
+
+Responsibilities:
+
+* normalize request;
+* create requestId;
+* validate request structure;
+* prepare verified identity input.
+
+S0 performs no policy decision and no retrieval.
+
+⸻
+
+S1 — Authority Resolution / DAR
+
+Responsibilities:
+
+* consume verified identity;
+* resolve customerId;
+* require explicit activeScopeId;
+* resolve active assignment;
+* resolve role;
+* enforce customer boundary;
+* produce deterministic AuthoritySnapshot;
+* produce deterministic state hash;
+* return typed denial on failure.
+
+DAR must not:
+
+* query vector databases;
+* evaluate semantic similarity;
+* call LLMs;
+* retrieve content;
+* evaluate prompt meaning.
+
+⸻
+
+S2 — Governance
+
+Inputs:
+
+* AuthoritySnapshot;
+* requested action;
+* purpose;
+* environment;
+* resource context;
+* policy snapshot;
+* current time.
+
+Controls:
+
+* role;
+* classification;
+* temporal validity;
+* retention;
+* legal hold;
+* approval;
+* source type;
+* topic restrictions.
+
+Output:
+
+GovernanceContext
+
+including:
+
+* decision;
+* typed reasons;
+* authority hash;
+* policy hash;
+* classification ceiling;
+* permitted scopes;
+* source restrictions;
+* approval state;
+* issued time;
+* expiry.
+
+S2 does not retrieve information.
+
+⸻
+
+11. S3 — Eligible Evidence Boundary
+
+The Eligible Evidence Boundary is one of TenantSage’s central technical differentiators.
+
+It determines the evidence universe before semantic retrieval begins.
+
+A sealed EEB may contain:
+
+authoritySnapshotHash
+authorityStateHash
+policySnapshotHash
+governanceHash
+activeScopeId
+allowedScopeIds
+allowedSourceTypes
+allowedTopicKeys
+classificationCeiling
+retentionConstraints
+legalHoldConstraints
+approvalRequired
+builtAt
+expiresAt
+eebHash
+
+The critical law is:
+
+Query text        ──X──> enlarge EEB
+Embedding         ──X──> enlarge EEB
+Retrieval score   ──X──> enlarge EEB
+Model output      ──X──> enlarge EEB
+
+Semantic relevance may reduce or rank eligible information.
+
+It must never create eligibility.
+
+⸻
+
+12. S4 — Governed Retrieval / TrustRAG
+
+TrustRAG performs retrieval only inside the sealed evidence universe established by S3.
+
+Canonical interface:
+
+retrieve({
+    eeb,
+    query
+})
+
+The retrieval system should not accept raw authorization inputs such as:
+
+customerId
+userId
+role
+
+for the purpose of independently recomputing authority.
+
+The operating model is:
+
+S3 decides the universe.
+S4 searches that universe.
+
+Not:
+
+S4 searches everything.
+Application filtering occurs later.
+
+TenantSage does not need to build its own vector database.
+
+TrustRAG should integrate with systems such as:
+
+* pgvector;
+* Elasticsearch;
+* OpenSearch;
+* Pinecone;
+* Weaviate;
+* enterprise search engines;
+* document stores.
+
+⸻
+
+13. S5 — Context Admission
+
+Before retrieved evidence becomes AI context, TenantSage verifies:
+
+EEB valid?
+Authority state fresh?
+Policy state fresh?
+Receipt completed?
+Evidence integrity valid?
+Provenance available?
+
+Context processing may include:
+
+* sanitization;
+* minimization;
+* evidence verification;
+* provenance binding;
+* context assembly.
+
+Any failed verification results in denial.
+
+⸻
+
+14. S6 — Generation
+
+TenantSage should not become a foundation-model platform.
+
+Generation remains thin:
+
+GovernedContext
+       ↓
+Approved LLM Adapter
+       ↓
+CandidateOutput
+
+Supported model providers may include:
+
+* OpenAI;
+* Anthropic;
+* Gemini;
+* local models;
+* enterprise-hosted models.
+
+Model providers are adapters, not governance authorities.
+
+⸻
+
+15. S7 — Validation
+
+Candidate output must be validated before disclosure or action.
+
+Validation may evaluate:
+
+* provenance;
+* disclosure restrictions;
+* classification;
+* output policy;
+* requested action;
+* evidence support;
+* tool constraints.
+
+Output:
+
+ValidatedOutput
+
+or:
+
+TypedDenial
+
+⸻
+
+16. S8 — Execution
+
+Execution controls external effects.
+
+Examples:
+
+sendEmail()
+updateLease()
+approveInvoice()
+deleteRecord()
+createTicket()
+writeDatabaseRecord()
+callMCPTool()
+triggerWorkflow()
+
+Canonical execution sequence:
+
+ValidatedOutput
+       ↓
+Execution Authorization
+       ↓
+External Action
+       ↓
+Execution Receipt
+
+AI agents must not be able to bypass S7 and execute directly.
+
+⸻
+
+17. Source Authority Model
+
+Governance metadata should belong to the canonical source.
+
+Example:
+
+Source
+ ├─ sourceId
+ ├─ customerId
+ ├─ scopeId
+ ├─ classification
+ ├─ legalHold
+ ├─ retainUntil
+ ├─ effectiveFrom
+ ├─ effectiveTo
+ ├─ status
+ ├─ sourceType
+ ├─ topicKey
+ └─ integrityHash
+
+Derived chunks should primarily contain:
+
+Chunk
+ ├─ sourceId
+ ├─ content
+ ├─ embedding
+ ├─ chunkIndex
+ └─ integrityData
+
+Permission state should not be unnecessarily duplicated into every chunk where it can drift independently from the authoritative source.
+
+⸻
+
+18. Monorepo Blueprint
+
+The platform should use one canonical monorepo.
+
+tenantsage-platform/
+│
+├── apps/
+│   ├── api/
+│   ├── console/
+│   ├── mcp/
+│   └── worker/
+│
+├── packages/
+│   ├── contracts/
+│   ├── canonicalization/
+│   ├── identity-adapter/
+│   ├── authority/
+│   ├── governance/
+│   ├── evidence-boundary/
+│   ├── source-registry/
+│   ├── retrieval/
+│   ├── receipts/
+│   ├── context/
+│   ├── generation/
+│   ├── validation/
+│   ├── execution/
+│   ├── ledger/
+│   └── observability/
+│
+├── adapters/
+│   ├── iam/
+│   ├── data/
+│   ├── vector/
+│   ├── llm/
+│   └── tools/
+│
+├── database/
+│   ├── migrations/
+│   ├── roles/
+│   ├── rls/
+│   ├── functions/
+│   └── triggers/
+│
+├── conformance/
+│   ├── negative/
+│   ├── bypass/
+│   ├── canonicalization/
+│   ├── receipts/
+│   ├── replay/
+│   └── evidence/
+│
+├── specs/
+│   ├── S0-ingress/
+│   ├── S1-authority/
+│   ├── S2-governance/
+│   ├── S3-eeb/
+│   ├── S4-retrieval/
+│   ├── S5-context/
+│   ├── S6-generation/
+│   ├── S7-validation/
+│   └── S8-execution/
+│
+├── docs/
+├── infra/
+└── .github/
+
+⸻
+
+19. Repository Ownership Rules
+
+apps/
+
+Applications are entry points.
+
+They must not become independent governance implementations.
+
+apps/api
+    HTTP/API ingress
+apps/console
+    Governance administration and evidence UI
+apps/mcp
+    MCP boundary
+apps/worker
+    Recovery, asynchronous processing and maintenance
+
+Application code must not contain shortcuts such as:
+
+if role == admin:
+    return everything
+
+Authority must be resolved through canonical governance packages.
+
+⸻
+
+20. Canonical Packages
+
+Recommended package names:
+
+@tenantsage/contracts
+@tenantsage/canonicalization
+@tenantsage/authority
+@tenantsage/governance
+@tenantsage/evidence-boundary
+@tenantsage/source-registry
+@tenantsage/retrieval
+@tenantsage/receipts
+@tenantsage/context
+@tenantsage/generation
+@tenantsage/validation
+@tenantsage/execution
+@tenantsage/ledger
+
+Marketing names may still include:
+
+* DAR;
+* EEB;
+* TrustRAG;
+* Evidence Ledger.
+
+Technical package names should remain stable and descriptive.
+
+⸻
+
+21. Dependency Direction
+
+Dependency direction is more important than folder structure.
+
+contracts
+   ↓
+identity-adapter
+   ↓
+authority
+   ↓
+governance
+   ↓
+evidence-boundary
+   ↓
+retrieval
+   ↓
+context
+   ↓
+generation
+   ↓
+validation
+   ↓
+execution
+
+Receipts and ledger provide cross-stage evidence.
+
+Forbidden dependency patterns include:
+
+authority → retrieval              NO
+governance → OpenAI                NO
+evidence-boundary → vector DB      NO
+retrieval → authority repository   NO
+LLM adapter → source registry      NO
+execution → bypass validation      NO
+
+⸻
+
+22. Database Enforcement
+
+Database enforcement is a first-class part of the platform.
+
+database/
+├── migrations/
+├── roles/
+├── rls/
+├── functions/
+└── triggers/
+
+Deployment must verify controls such as:
+
+FORCE ROW LEVEL SECURITY
+runtime role != table owner
+runtime role has no BYPASSRLS
+customer context is derived server-side
+request context is transaction-scoped
+privileged migration credentials are unavailable
+to normal runtime paths
+
+Security must not rely only on application-level:
+
+WHERE customer_id = ?
+
+predicates.
+
+⸻
+
+23. External Adapter Boundary
+
+TenantSage integrates with systems it does not own.
+
+adapters/
+├── iam/
+│   ├── oidc/
+│   ├── entra/
+│   ├── okta/
+│   └── auth0/
+│
+├── data/
+│   ├── postgres/
+│   ├── sharepoint/
+│   ├── google-drive/
+│   └── s3/
+│
+├── vector/
+│   ├── pgvector/
+│   ├── pinecone/
+│   └── opensearch/
+│
+├── llm/
+│   ├── openai/
+│   ├── anthropic/
+│   ├── gemini/
+│   └── local/
+│
+└── tools/
+    ├── mcp/
+    ├── email/
+    ├── crm/
+    └── workflow/
+
+The fundamental adapter rule is:
+
+An adapter may translate or execute a decision. It may never override a governance decision.
+
+⸻
+
+24. What TenantSage Should Not Build
+
+TenantSage should avoid becoming another all-in-one enterprise infrastructure stack.
+
+It should not build its own:
+
+* identity provider;
+* password authentication system;
+* SSO product;
+* LDAP platform;
+* general-purpose IAM;
+* document management system;
+* object storage platform;
+* vector database;
+* foundation model;
+* enterprise search engine;
+* SIEM;
+* workflow engine;
+* email platform.
+
+TenantSage should:
+
+Consume. Govern. Enforce. Prove.
+
+It should not attempt to replace the systems that already establish identity, store enterprise data, execute workflows, or provide AI models.
+
+⸻
+
+25. Deployment Strategy
+
+TenantSage should follow a hybrid SaaS and enterprise deployment strategy.
+
+One governance core should support all deployment profiles.
+
+Do not create separate products or codebases for SaaS and enterprise customers.
+
+                      TENANTSAGE
+             Governance Execution Platform
+                        │
+       ┌────────────────┼─────────────────┐
+       │                │                 │
+ TenantSage Cloud   Dedicated Cloud    Private Enterprise
+      SaaS             Instance          Deployment
+       │                │                 │
+       └────────────────┼─────────────────┘
+                        │
+                Same Governance Core
+
+⸻
+
+26. Tier 1 — Managed SaaS
+
+Target customers:
+
+* SMEs;
+* property management;
+* small legal practices;
+* development teams;
+* internal AI projects;
+* pilots;
+* early enterprise evaluations.
+
+TenantSage operates:
+
+TenantSage Cloud
+       │
+       ├─ Governance API
+       ├─ Console
+       ├─ Policy Service
+       ├─ Receipts
+       └─ Evidence Ledger
+
+The customer connects:
+
+Their IAM
+Their Data
+Their RAG / Search
+Their LLM
+Their Applications
+
+Where possible, enterprise content should remain within the customer’s data plane.
+
+TenantSage should consume authority and governance metadata without requiring unnecessary duplication of enterprise content.
+
+⸻
+
+27. Tier 2 — Dedicated Cloud
+
+Designed for organisations that accept managed infrastructure but require stronger isolation.
+
+Example:
+
+Customer A
+ └─ Dedicated TenantSage Environment
+Customer B
+ └─ Dedicated TenantSage Environment
+
+Potential dedicated components include:
+
+* database;
+* encryption keys;
+* network;
+* region;
+* evidence ledger;
+* service credentials;
+* deployment lifecycle.
+
+This tier supports higher security and compliance requirements while remaining managed by TenantSage.
+
+⸻
+
+28. Tier 3 — Private Enterprise Deployment
+
+Target customers:
+
+* government;
+* hospitals;
+* financial institutions;
+* legal organisations;
+* highly regulated enterprises;
+* security-sensitive enterprises.
+
+Deployment:
+
+Customer Cloud / VPC
+        │
+        └─ TenantSage Runtime
+              ├─ Gateway
+              ├─ Governance
+              ├─ EEB
+              ├─ Retrieval Controls
+              ├─ Receipts
+              └─ Ledger
+
+Commercial model:
+
+Annual Enterprise Licence
++
+Implementation
++
+Integration
++
+Deployment
++
+Conformance Package
++
+Support SLA
+
+For high-assurance environments, the runtime may operate with limited or no dependency on a TenantSage-hosted control plane.
+
+⸻
+
+29. Initial Target Buyers
+
+TenantSage should sell to roles responsible for AI risk and authority rather than only to application developers.
+
+Primary economic and technical buyers include:
+
+* CISO;
+* CIO;
+* CTO;
+* Head of Risk;
+* Head of AI Governance;
+* Compliance;
+* Internal Audit;
+* Legal;
+* Data Governance;
+* Security Architecture;
+* Enterprise Architecture;
+* AI Platform Teams.
+
+The business case is therefore fundamentally different from a chatbot productivity product.
+
+⸻
+
+30. Primary Customer Problem
+
+The central customer problem is not:
+
+“How can our AI answer more questions?”
+
+It is:
+
+“How can we deploy AI without giving the retrieval layer, model, or agent uncontrolled authority over enterprise information and actions?”
+
+A second problem is:
+
+“After an AI interaction occurs, can we reconstruct what authority applied, what information was eligible, what evidence entered the model context, what was disclosed, and what actions were executed?”
+
+TenantSage addresses both.
+
+⸻
+
+31. Demonstration Strategy
+
+The flagship demonstration should make governance visible without requiring the audience to understand S0–S8 first.
+
+Example organisation:
+
+CEO
+HR Manager
+Property Manager
+Staff
+
+Example information:
+
+Public Policy
+Staff Handbook
+Salary Records
+Board Minutes
+Legal Hold Documents
+Property A Records
+Property B Records
+
+Prompt:
+
+“Show me the CEO salary and summarize the board discussion.”
+
+Staff
+
+DENY
+CLASSIFICATION_DENIED
+
+HR Manager
+
+ALLOW
+Salary Records
+DENY
+Board Minutes
+
+CEO
+
+ALLOW
+Salary Records
+ALLOW
+Board Minutes
+
+The Console then shows:
+
+Who requested it
+Which active scope applied
+Which assignment was used
+Which policy version applied
+Which sources were eligible
+Which sources were rejected
+Why each decision occurred
+Which evidence entered context
+Receipt state
+Decision hashes
+Replay evidence
+
+The customer sees the product value immediately:
+
+The model did not decide what it was allowed to see.
+
+TenantSage did.
+
+⸻
+
+32. Commercial Packaging
+
+Product 1 — TenantSage Gateway
+
+Customer value:
+
+Governance before AI retrieval and action.
+
+Primary users:
+
+* AI teams;
+* platform engineers;
+* security architects.
+
+⸻
+
+Product 2 — TenantSage Console
+
+Customer value:
+
+Operational visibility into every governance decision.
+
+Primary users:
+
+* security;
+* compliance;
+* operations;
+* governance teams.
+
+⸻
+
+Product 3 — TenantSage Evidence
+
+Customer value:
+
+Durable receipts, decision history, evidence lineage and replay.
+
+Primary users:
+
+* audit;
+* investigations;
+* compliance;
+* security;
+* legal.
+
+⸻
+
+Product 4 — TenantSage Conformance
+
+Customer value:
+
+Evidence that declared controls operate as intended within a defined deployment profile.
+
+Primary users:
+
+* CISO;
+* risk;
+* assurance teams;
+* auditors;
+* enterprise architecture.
+
+⸻
+
+33. Pricing Model
+
+TenantSage should not primarily use per-seat pricing.
+
+The product is infrastructure and governance control rather than user productivity software.
+
+A more appropriate pricing model is:
+
+Base Platform Fee
++
+Governed Requests
++
+Protected Sources
++
+Evidence Retention / Storage
++
+Deployment Profile
++
+Support / Assurance
+
+Indicative—not final—pricing structure:
+
+SaaS Starter
+
+AUD 299–499/month
+
+Possible target:
+
+* development;
+* pilot;
+* small workloads;
+* limited sources;
+* standard retention.
+
+⸻
+
+Business
+
+AUD 1,500–3,000/month
+
+Possible target:
+
+* production AI application;
+* multiple scopes;
+* multiple data sources;
+* governance console;
+* evidence retention;
+* standard conformance.
+
+⸻
+
+Enterprise Cloud
+
+AUD 5,000+/month
+
+Possible target:
+
+* larger request volumes;
+* dedicated integrations;
+* higher retention;
+* advanced governance;
+* dedicated environment options.
+
+These figures should remain hypotheses until customer discovery and pilot evidence validate willingness to pay.
+
+⸻
+
+34. Enterprise Commercial Model
+
+Enterprise pricing should be structured around deployment and risk scope rather than seats.
+
+Indicative model:
+
+Implementation
+AUD 15,000–100,000+
+Annual Platform Licence
+AUD 30,000–250,000+
+Conformance / Assurance
+Optional
+Premium Support / SLA
+Optional
+
+Final pricing should vary according to:
+
+* deployment model;
+* number of governed applications;
+* protected data domains;
+* integration complexity;
+* evidence retention;
+* availability requirements;
+* support level;
+* assurance scope.
+
+⸻
+
+35. Go-to-Market Strategy
+
+Phase 1 — Design Partners and Pilots
+
+Goal:
+
+Prove that customers understand and value governance-before-retrieval.
+
+Target use cases should have:
+
+* sensitive enterprise information;
+* multiple authority levels;
+* existing IAM;
+* existing AI or RAG initiative;
+* measurable governance risk.
+
+Good early sectors include:
+
+* property management;
+* legal;
+* healthcare;
+* financial services;
+* government;
+* enterprise knowledge systems.
+
+The first pilot should be intentionally narrow.
+
+Example:
+
+1 identity provider
+1 enterprise application
+1 governed data domain
+1 retrieval system
+1 LLM
+3–5 authority roles
+1 decision console
+1 conformance bundle
+
+⸻
+
+36. Phase 2 — Managed SaaS Productization
+
+Productize repeated pilot requirements into:
+
+* standard IAM adapters;
+* standard source adapters;
+* hosted Gateway;
+* policy administration;
+* Decision Evidence Console;
+* receipt service;
+* evidence replay;
+* standard conformance suite.
+
+Goal:
+
+Reduce integration time and create recurring revenue.
+
+⸻
+
+37. Phase 3 — Dedicated Enterprise
+
+Add:
+
+* dedicated tenancy;
+* dedicated database;
+* customer-managed encryption options;
+* network isolation;
+* regional deployment;
+* advanced policy administration;
+* enterprise support;
+* richer audit export;
+* enterprise connectors.
+
+⸻
+
+38. Phase 4 — Private Deployment
+
+Support deployment in:
+
+* customer cloud;
+* customer VPC;
+* private network;
+* regulated environment.
+
+Maintain the same governance core and conformance model.
+
+Avoid creating a separate enterprise implementation.
+
+⸻
+
+39. Product Moat
+
+The defensible part of TenantSage is not simply having a policy engine.
+
+Its stronger differentiation is the combination of:
+
+Verified Identity
+      ↓
+Deterministic Authority
+      ↓
+Versioned Governance
+      ↓
+Sealed Eligible Evidence Boundary
+      ↓
+Governed Retrieval
+      ↓
+Durable Admission / Retrieval Evidence
+      ↓
+Context Control
+      ↓
+Validation
+      ↓
+Execution Control
+      ↓
+Replayable Proof
+
+The moat is therefore the enforceable relationship between:
+
+* authority;
+* eligibility;
+* evidence;
+* decision state;
+* execution;
+* proof.
+
+⸻
+
+40. Competitive Differentiation
+
+TenantSage should not compete primarily on:
+
+* model quality;
+* embedding quality;
+* vector search speed;
+* chatbot UI;
+* document ingestion;
+* workflow automation.
+
+Its differentiation is:
+
+1. Governance before retrieval
+
+Eligibility is established before semantic search.
+
+2. Separation of authority from relevance
+
+Vector similarity cannot expand authorization.
+
+3. Explicit AI evidence boundaries
+
+AI receives only evidence inside a governed boundary.
+
+4. Deterministic decisions
+
+Equivalent canonical governance inputs should produce equivalent governance outputs.
+
+5. Durable decision evidence
+
+Governance decisions are linked to receipts and evidence.
+
+6. Replayability
+
+The organisation can reconstruct what the system decided from retained versioned inputs.
+
+7. Conformance as a product capability
+
+Security claims are tied to reproducible evidence rather than architectural assertions.
+
+⸻
+
+41. Product Success Metrics
+
+Early product metrics should focus on governance outcomes rather than model engagement.
+
+Examples:
+
+Enforcement
+
+* percentage of AI retrieval requests processed through TenantSage;
+* percentage of governed actions with complete receipts;
+* unauthorized source admission rate;
+* stale policy acceptance rate;
+* bypass-path test success rate.
+
+Reliability
+
+* governance decision latency;
+* EEB construction latency;
+* receipt commit latency;
+* availability;
+* replay success rate.
+
+Customer Value
+
+* time required to investigate an AI decision;
+* time required to prove why information was admitted;
+* number of applications governed;
+* number of protected sources;
+* audit preparation time;
+* policy change propagation time.
+
+⸻
+
+42. Product Build Priorities
+
+The first commercial version does not require every conceivable adapter or enterprise feature.
+
+P0 — Required
+
+* canonical contracts;
+* identity input boundary;
+* DAR;
+* policy engine;
+* EEB;
+* governed retrieval;
+* source registry;
+* durable receipt state machine;
+* context admission;
+* output validation;
+* evidence ledger;
+* Decision Evidence Console;
+* RLS enforcement;
+* negative tests;
+* bypass tests;
+* replay;
+* CI conformance bundle.
+
+P1 — Commercialization
+
+* OIDC integration;
+* pgvector;
+* OpenAI adapter;
+* MCP boundary;
+* policy administration UI;
+* customer onboarding;
+* deployment configuration;
+* standard dashboards;
+* evidence export.
+
+P2 — Enterprise
+
+* Entra ID;
+* Okta;
+* SharePoint;
+* Google Drive;
+* OpenSearch;
+* dedicated deployment;
+* customer-controlled encryption;
+* regional deployments;
+* advanced approvals;
+* enterprise audit integrations.
+
+P3 — Ecosystem
+
+* partner SDK;
+* adapter framework;
+* policy packs;
+* conformance packs;
+* SIEM export;
+* developer marketplace;
+* integration certification.
+
+⸻
+
+43. Non-Goals
+
+TenantSage should explicitly maintain the following non-goals:
+
+TenantSage is not an identity provider.
+TenantSage is not a replacement IAM.
+TenantSage is not a document platform.
+TenantSage is not a vector database.
+TenantSage is not a foundation model.
+TenantSage is not a chatbot framework.
+TenantSage is not a general workflow engine.
+TenantSage is not a SIEM.
+TenantSage does not claim that governance
+eliminates every possible AI leakage channel.
+
+Strong non-goals protect the product from architectural expansion and commercial dilution.
+
+⸻
+
+44. Final Product Definition
+
+TenantSage
+
+AI Governance Execution Platform
+
+Hero Product
+
+TenantSage Governance Gateway
+
+Supporting Products
+
+* TenantSage Console
+* TenantSage Evidence
+* TenantSage Conformance
+
+Core Technology
+
+* Deterministic Authority Resolution — DAR
+* Deterministic Policy Decisioning
+* Eligible Evidence Boundary — EEB
+* TrustRAG Governed Retrieval
+* Source Authority Inheritance
+* Context Admission
+* Output Validation
+* Execution Authorization
+* Durable Receipts
+* Evidence Ledger
+* Replay and Conformance
+
+⸻
+
+45. Final Business Strategy
+
+The recommended commercial path is:
+
+Design Partner
+      ↓
+30-Day Governed AI Pilot
+      ↓
+Managed TenantSage Cloud
+      ↓
+Recurring SaaS Revenue
+      ↓
+Dedicated Enterprise Environment
+      ↓
+Private Enterprise Deployment
+      ↓
+Conformance / Assurance Services
+
+All deployment models use the same canonical governance core.
+
+The product should not fork into separate SaaS and enterprise implementations.
+
+Differences should be limited to:
+
+* isolation;
+* networking;
+* deployment topology;
+* credentials;
+* encryption;
+* connectors;
+* availability;
+* retention;
+* operational assurance.
+
+⸻
+
+46. Strategic Thesis
+
+TenantSage should not attempt to win by making AI more intelligent.
+
+It should win by making enterprise AI governable, bounded and provable.
+
+The central business proposition is:
+
+Enterprises should not have to trust a retrieval engine, prompt, LLM or agent to decide for itself what information it is permitted to access.
+
+TenantSage establishes that authority before retrieval.
+
+And after the interaction, TenantSage provides evidence of:
+
+Who requested it
+What authority existed
+Which policy applied
+What evidence was eligible
+What evidence was retrieved
+What entered context
+What was generated
+What was validated
+What was executed
+Why the system allowed or denied it
+
+That is the product.
+
+That is the commercial value.
+
+And that is the boundary the TenantSage platform should preserve as it moves from architecture into production software.
