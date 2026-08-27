@@ -1,0 +1,1399 @@
+# TenantSage™
+
+## Architectural Rationale & Governance Enforcement Specification
+
+**Evidence of Original Selection, Arrangement, Authority Control, Retrieval Governance, and Execution Path**
+
+**Author:** Arthit Pukhampuang
+**Jurisdiction:** Australia
+**Year:** 2025–2026
+**System:** TenantSage™
+**Canonical Architecture:** S0–S8 Governed AI Authority and Execution Control Plane
+**Retrieval Foundation:** TenantSage Real-Time Inheritance Retrieval Path™
+**Status:** Canonical Replacement Reference — v2.0
+
+**Change Policy:** Editorial changes may preserve meaning. Structural changes to authority, evidence eligibility, retrieval, validation, or execution semantics require author approval.
+
+---
+
+# 1. Purpose of This Document
+
+This document formally describes the architectural rationale behind TenantSage™ as it exists in its current canonical form.
+
+It preserves the technical ancestry of the TenantSage Real-Time Inheritance Retrieval Path™ while placing that mechanism inside the wider S0–S8 governance and execution architecture.
+
+Its purpose is to:
+
+1. Demonstrate that TenantSage is not a generic RAG, policy wrapper, or agent orchestration pattern.
+2. Establish originality in the selection, arrangement, and enforced ordering of authority, governance, evidence eligibility, retrieval, generation, validation, execution, and proof.
+3. Explain why specific non-standard design choices were made.
+4. Provide technical evidence supporting the system's claimed behaviour.
+5. Define the relationship between the original governed-retrieval mechanism and the current complete TenantSage control plane.
+
+This document is intentionally descriptive rather than a deployment manual.
+
+It records the design intent, architectural constraints, and required choreography.
+
+---
+
+# 2. System Definition — Authoritative
+
+## 2.1 TenantSage™
+
+TenantSage™ is a governance-first AI authority and execution control plane designed for environments in which AI access, evidence use, and external actions must remain bounded by deterministic authority and policy.
+
+The architecture does not allow the AI model, agent, retriever, or tool layer to determine its own authority.
+
+Authority and governance are resolved outside generation, and eligible evidence is established before governed retrieval begins.
+
+The core operating rules are:
+
+**No Authority → No Retrieval.**
+
+**No Eligible Evidence → No Context.**
+
+**No Governed Evidence → No Generation.**
+
+**No ValidationApproval → No Execution.**
+
+**No durable completion proof → No successful execution claim.**
+
+The AI can reason, plan, search within authorized boundaries, generate, and propose actions.
+
+It does not control its own authority.
+
+---
+
+## 2.2 Canonical S0–S8 Architecture
+
+### S0 — Request Ingress
+
+Authenticate identity, canonicalize the request, establish trusted request context, and reject unverifiable ingress.
+
+An unidentified or unverifiable principal cannot proceed into authority resolution as though identity were established.
+
+---
+
+### S1 — Deterministic Authority Resolution (DAR)
+
+Resolve the principal's current authority independently of the AI model.
+
+This includes, as applicable:
+
+* customer identity;
+* organisation;
+* active scope;
+* role;
+* entitlements;
+* permitted scope ancestry;
+* authority state;
+* authority freshness;
+* authority-state hash.
+
+Authority is not inferred from the prompt.
+
+The AI cannot expand, reinterpret, or grant authority to itself.
+
+---
+
+### S2 — Governance Decision
+
+Evaluate the request against current governance rules.
+
+Relevant dimensions can include:
+
+* scope;
+* visibility;
+* classification;
+* temporal validity;
+* retention;
+* legal hold;
+* topic restrictions;
+* source type;
+* override rules;
+* deny precedence;
+* approval requirements.
+
+The result determines whether evidence eligibility may be constructed.
+
+---
+
+### S3 — Sealed Eligible Evidence Boundary (EEB)
+
+Construct the exact evidence boundary the request is permitted to search.
+
+The EEB can bind:
+
+* `customerId`;
+* `activeScopeId`;
+* allowed scope IDs;
+* allowed topic keys;
+* allowed source types;
+* classification ceiling;
+* temporal constraints;
+* retention constraints;
+* legal-hold constraints;
+* authority snapshot;
+* policy snapshot;
+* governance state;
+* approval requirements;
+* creation and expiry time.
+
+The boundary is sealed and hash-bound.
+
+Once established for the operation, the AI cannot widen it.
+
+Relevant evidence that falls outside the boundary remains ineligible.
+
+---
+
+### S4 — Governed Retrieval — TrustRAG
+
+Semantic retrieval operates only against evidence permitted by the EEB.
+
+The retriever does not search everything the system technically stores and then remove unauthorized results afterwards.
+
+Evidence eligibility exists before semantic ranking.
+
+The retrieval operation produces evidence identifying what was actually retrieved and under which EEB.
+
+---
+
+### S5 — Governed Context
+
+Retrieved evidence does not enter generation merely because retrieval returned it.
+
+TenantSage constructs Governed Context from completed governed retrieval evidence.
+
+The context is bound to the request, evidence boundary, retrieval state, and provenance.
+
+Out-of-band, stale, unreceipted, or unauthorized evidence cannot simply be inserted into the model context.
+
+---
+
+### S6 — Generation
+
+Only after governed context exists may the AI generate a response or candidate action.
+
+Generation therefore occurs downstream of authority, governance, evidence eligibility, and governed retrieval.
+
+The model reasons over evidence that the system has already determined it is allowed to receive.
+
+---
+
+### S7 — Validation
+
+Generated output or a proposed action is validated against the governing constraints.
+
+For action requests, validation can produce a `ValidatedAction`.
+
+A `ValidatedAction` is **not** execution authority.
+
+Execution requires a separate `ValidationApproval` bound to the exact action material authorized for execution.
+
+---
+
+### S8 — Approval-Bound Execution
+
+S8 applies when the request requires an external action.
+
+Execution proceeds only from valid execution authority.
+
+The canonical execution path is:
+
+**ValidatedAction
+→ Approval Decision
+→ ValidationApproval
+→ ExecutionIntent
+→ Durable Intent Proof
+→ Execute Exact Approved Material
+→ Verify Outcome
+→ CompletedExecutionReceipt
+→ Durable Completion Proof
+→ Final ExecutionReceipt
+→ Replay Proof
+→ Release Verified Success**
+
+A tool response alone does not establish successful execution.
+
+No durable completion proof means TenantSage cannot claim successful execution.
+
+---
+
+# 3. Core Architectural Problems Addressed
+
+## 3.1 The AI Authority Failure Mode
+
+An AI system can correctly understand a request while still being wrong about whether the requester is authorized to make it.
+
+Likewise, a retrieval system can identify highly relevant information that the requester is not authorized to access.
+
+A capable agent may also construct a technically valid external action without possessing authority to execute it.
+
+TenantSage treats these as authority-boundary failures rather than prompt-quality failures.
+
+The model cannot answer for itself:
+
+* Who is this principal?
+* What authority does the principal currently possess?
+* What scope is active?
+* What evidence is eligible?
+* What action is authorized?
+* Has the governing state changed?
+* Is execution approved?
+
+Those decisions belong to the control plane.
+
+---
+
+## 3.2 The Retrieval Leakage Failure Mode
+
+Traditional or loosely governed RAG implementations can permit:
+
+* semantic retrieval before authority is fully resolved;
+* ranking across data outside the permitted evidence set;
+* post-retrieval permission filtering;
+* stale authorization metadata on vector chunks;
+* legally or temporally invalid material to remain searchable;
+* context construction before provenance is proven.
+
+This creates an important distinction:
+
+**Information may be relevant without being eligible.**
+
+TenantSage therefore separates relevance from permission.
+
+---
+
+## 3.3 The Execution Authority Failure Mode
+
+Agentic systems introduce another boundary.
+
+A model may:
+
+* reason;
+* propose;
+* generate;
+* select tools;
+* construct parameters;
+* recommend an action.
+
+None of those capabilities inherently grant execution authority.
+
+Failures occur when:
+
+* a candidate action is treated as authorization;
+* validation is confused with approval;
+* executed material differs from approved material;
+* retries create duplicate side effects;
+* success is claimed from a tool response without outcome verification.
+
+TenantSage separates reasoning capability from execution authority.
+
+---
+
+# 4. Original Architectural Design Choices
+
+## 4.1 Authority Before Retrieval
+
+**Decision**
+
+Retrieval cannot begin until deterministic authority and active scope have been resolved.
+
+**Rationale**
+
+Relevance cannot create permission.
+
+A semantic search engine must not discover information first and determine afterward whether it should have been allowed to inspect that information.
+
+The AI or retriever cannot widen the requester's authority.
+
+---
+
+## 4.2 Eligible Evidence Boundary Before Semantic Search
+
+**Decision**
+
+S3 creates the Eligible Evidence Boundary before S4 performs semantic retrieval.
+
+**Rationale**
+
+The EEB determines which evidence is eligible to participate in retrieval.
+
+Semantic similarity is therefore evaluated inside an already governed evidence space.
+
+The architecture follows:
+
+**Authority → Governance → Eligibility → Retrieval**
+
+rather than:
+
+**Retrieval → Ranking → Permission Filtering**
+
+This distinction is fundamental.
+
+---
+
+## 4.3 Governance at the Parent Source — Not the Chunk
+
+**Decision**
+
+Governance authority belongs to the source record.
+
+Derived chunks inherit current source governance through their relationship to the parent source rather than possessing independent permission truth.
+
+**Rationale**
+
+This:
+
+* prevents governance drift across derived chunks;
+* allows one source-level governance change to affect every derived chunk;
+* avoids re-embedding merely to change governance state;
+* prevents stale chunk-level permission metadata becoming authoritative;
+* preserves a single governance source of truth.
+
+The technical relationship remains:
+
+`rag_chunks.source_id → rag_sources.id`
+
+Governance remains authoritative at `rag_sources`.
+
+---
+
+## 4.4 Real-Time Inheritance — The Ghost Effect
+
+The original TenantSage Real-Time Inheritance Retrieval Path™ remains technically present inside S4.
+
+**Decision**
+
+Every governed retrieval path must resolve the authoritative parent-source relationship.
+
+A vector chunk possesses no independent governance validity.
+
+**Effect**
+
+If the parent source becomes ineligible, its derived chunks become unavailable to AI retrieval even though the chunks themselves remain physically stored.
+
+This is the **Ghost Effect**:
+
+> Child content becomes invisible to AI without being modified, deleted, re-embedded, or independently reclassified.
+
+This mechanism remains part of current TenantSage.
+
+It is now one component of the larger authority and evidence-control architecture rather than the complete architecture itself.
+
+---
+
+## 4.5 Customer Isolation as a Hard Boundary
+
+**Decision**
+
+`customerId` is the hard isolation boundary.
+
+Cross-customer access must not depend primarily on application code remembering to include:
+
+`WHERE customer_id = ...`
+
+**Rationale**
+
+Application defects must not silently become authorization defects.
+
+For PostgreSQL deployments, the intended security model therefore includes:
+
+* `customer_id` on protected customer-scoped tables;
+* Row-Level Security;
+* forced RLS where required;
+* a non-owner application role;
+* no `BYPASSRLS`;
+* trusted transaction-scoped customer context;
+* explicit cross-customer negative tests.
+
+Application filtering may improve query behaviour.
+
+It is not the primary security boundary.
+
+---
+
+## 4.6 Explicit Active Scope
+
+**Decision**
+
+A governed request carries an explicit `activeScopeId`.
+
+**Rationale**
+
+Users may possess authority across multiple properties, departments, organisations, or operational scopes.
+
+Possessing authority somewhere does not mean that authority applies everywhere simultaneously.
+
+The active scope must therefore be explicit and derived through authority resolution.
+
+The model cannot select its own authority scope from natural-language interpretation.
+
+---
+
+## 4.7 Deny Precedence
+
+**Decision**
+
+Governance uses deny precedence.
+
+**Rationale**
+
+Evidence can be:
+
+* semantically relevant;
+* highly ranked;
+* within the same customer;
+* operationally useful;
+
+and still be prohibited.
+
+A denial cannot be overridden merely by relevance, similarity score, model confidence, or user preference.
+
+---
+
+## 4.8 Whitelist-Controlled Override Resolution
+
+**Decision**
+
+Scope-level policy overrides are permitted only where the applicable `topic_key` has explicit override authorization.
+
+**Rationale**
+
+This prevents local information from silently replacing higher-level governing information merely because the local material ranks more strongly.
+
+Explicit override authority provides:
+
+* intentional delegation;
+* deterministic precedence;
+* auditability;
+* protection against silent policy erosion.
+
+---
+
+## 4.9 Legal Hold as Retrieval Ineligibility
+
+**Decision**
+
+Where TenantSage governance defines legal hold as retrieval-prohibiting, affected source material is excluded from evidence eligibility.
+
+It therefore cannot enter semantic retrieval.
+
+**Rationale**
+
+The safer control is to prevent AI exposure rather than retrieve sensitive material and depend on downstream filtering.
+
+Legal-hold behaviour is policy-driven and enforced before retrieval.
+
+---
+
+## 4.10 Governed Context as a Separate Stage
+
+**Decision**
+
+Retrieval does not directly equal generation context.
+
+**Rationale**
+
+TenantSage introduces S5 so that evidence must successfully cross a separate governed-context boundary.
+
+Only receipted, governed evidence can become model context.
+
+This creates a clear distinction between:
+
+**retrieved evidence**
+
+and
+
+**evidence authorized for generation context.**
+
+---
+
+## 4.11 ValidationApproval as S8 Execution Authority
+
+**Decision**
+
+`ValidatedAction` does not authorize execution.
+
+S8 requires `ValidationApproval`.
+
+**Rationale**
+
+A system must distinguish:
+
+* something the AI proposed;
+* something the system validated;
+* something an authorized decision process approved for execution.
+
+Collapsing those states gives the reasoning system implicit authority over its own actions.
+
+TenantSage does not permit that.
+
+---
+
+## 4.12 Durable Proof Before Success
+
+**Decision**
+
+TenantSage does not release a successful execution claim until durable completion proof exists.
+
+**Rationale**
+
+The following are insufficient on their own:
+
+* the model saying the action succeeded;
+* the orchestrator saying it called a tool;
+* an HTTP success response;
+* an execution attempt record.
+
+TenantSage must verify the outcome and preserve durable evidence sufficient to support the success claim.
+
+---
+
+# 5. Canonical Technical Enforcement
+
+## 5.1 Authority State
+
+S1 produces deterministic authority material.
+
+Representative fields include:
+
+```text
+customerId
+organisationId
+activeScopeId
+role
+entitlements
+allowedScopeIds
+authoritySnapshotHash
+authorityStateHash
+builtAt
+expiresAt
+```
+
+Missing identity, missing authority, missing active scope, invalid ancestry, expired authority, or unverifiable authority state causes denial before retrieval.
+
+---
+
+## 5.2 Governance State
+
+S2 evaluates current governance independently from generation.
+
+Representative evidence includes:
+
+```text
+policySnapshotHash
+policyStateHash
+governanceHash
+classificationCeiling
+allowedTopicKeys
+allowedSourceTypes
+retentionConstraints
+legalHoldConstraints
+approvalRequired
+```
+
+Governance state must remain current for downstream consumption.
+
+---
+
+## 5.3 Eligible Evidence Boundary
+
+The EEB is the pre-retrieval contract.
+
+Representative canonical fields include:
+
+```text
+requestId
+customerId
+activeScopeId
+
+allowedScopeIds[]
+allowedTopicKeys[]
+allowedSourceTypes[]
+
+classificationCeiling
+
+authoritySnapshotHash
+authorityStateHash
+policySnapshotHash
+policyStateHash
+governanceHash
+
+retentionConstraints
+legalHoldConstraints
+approvalRequired
+
+builtAt
+expiresAt
+eebHash
+```
+
+The EEB is immutable for the retrieval operation.
+
+The AI cannot add:
+
+* another customer;
+* another scope;
+* another topic;
+* another source type;
+* a higher classification;
+* otherwise ineligible evidence.
+
+If the authority or governance state becomes invalid, the boundary cannot simply be reused as though nothing changed.
+
+---
+
+## 5.4 Governed Retrieval Receipt
+
+S4 records what retrieval actually used.
+
+Representative fields include:
+
+```text
+requestId
+eebHash
+queryHash
+retrievedEvidenceIds[]
+retrievalHash
+retrievedAt
+```
+
+This allows the system to prove:
+
+* which EEB governed retrieval;
+* which query was executed;
+* which evidence was returned;
+* when retrieval occurred.
+
+No completed governed retrieval means no governed context.
+
+---
+
+## 5.5 Parent-Source Inheritance
+
+The canonical data relationship retains the original source-to-chunk enforcement model.
+
+Conceptually:
+
+```text
+rag_sources
+    id
+    customer_id
+    organisation_id
+    scope_id
+    topic_key
+    type
+    title
+    status
+    visibility
+    classification
+    legal_hold
+    effective_from
+    effective_to
+    retain_until
+```
+
+Derived content:
+
+```text
+rag_chunks
+    id
+    source_id
+    customer_id
+    organisation_id
+    scope_id
+    content
+    embedding
+    chunk_index
+    chunk_hash
+```
+
+Governance authority remains at the source.
+
+Chunks inherit source eligibility through `source_id`.
+
+This preserves the Ghost Effect and prevents duplicated chunk metadata from becoming independent permission truth.
+
+---
+
+## 5.6 Logical Retrieval Ordering
+
+The logical enforcement path is:
+
+```text
+1. Verify identity and request.
+
+2. Resolve deterministic authority.
+
+3. Verify active scope.
+
+4. Evaluate current governance.
+
+5. Construct and seal the EEB.
+
+6. Validate EEB freshness.
+
+7. Restrict candidate sources to the EEB.
+
+8. Enforce source governance:
+   - customer
+   - scope
+   - publication status
+   - visibility
+   - classification
+   - effective period
+   - retention
+   - legal hold
+   - topic/override rules
+
+9. Resolve mandatory source-to-chunk inheritance.
+
+10. Perform semantic similarity only over eligible evidence.
+
+11. Emit RetrievalReceipt.
+
+12. Construct GovernedContext only from receipted evidence.
+```
+
+Implementations may optimize database query planning.
+
+They may not alter these authority semantics.
+
+---
+
+## 5.7 PostgreSQL Isolation Baseline
+
+For PostgreSQL deployments, the intended isolation baseline is:
+
+```text
+Shared schema
++
+customer_id on protected records
++
+RLS enabled
++
+FORCE ROW LEVEL SECURITY where required
++
+non-owner application role
++
+no BYPASSRLS
++
+trusted transaction-scoped customer context
++
+cross-customer negative tests
+```
+
+The application should not treat ordinary query filtering as the security boundary.
+
+---
+
+# 6. Execution Choreography
+
+## 6.1 Read-Only Requests
+
+Not every request reaches S8.
+
+A read-only information request may complete without external execution.
+
+For example:
+
+```text
+S0 Request
+→ S1 Authority
+→ S2 Governance
+→ S3 EEB
+→ S4 Retrieval
+→ S5 Governed Context
+→ S6 Generation
+→ S7 Validation
+→ Response
+```
+
+S8 exists only where an external action must be performed.
+
+---
+
+## 6.2 Action Requests
+
+For an action request:
+
+```text
+S6 Candidate Action
+        ↓
+S7 Validate Action
+        ↓
+ValidatedAction
+        ↓
+Approval Decision
+        ↓
+ValidationApproval
+        ↓
+S8 ExecutionIntent
+        ↓
+Durable Intent Proof
+        ↓
+Execute Exact Approved Material
+        ↓
+Verify External Outcome
+        ↓
+CompletedExecutionReceipt
+        ↓
+Durable Completion Proof
+        ↓
+Final ExecutionReceipt
+        ↓
+Replay Proof
+        ↓
+Release Verified Success
+```
+
+If approval is denied:
+
+```text
+Fail Closed
+```
+
+If execution cannot be verified:
+
+```text
+Record Failure or Uncertainty
+```
+
+It does not become successful merely because execution was attempted.
+
+---
+
+## 6.3 Exact-Material Binding
+
+The material executed at S8 must be the material approved at S7.
+
+The approval cannot authorize:
+
+> "something similar to this action."
+
+It authorizes the exact governed action represented by the approved material.
+
+Any material change requires new validation and approval.
+
+---
+
+## 6.4 Execution Intent Proof
+
+Before an external side effect occurs, TenantSage creates durable evidence of execution intent.
+
+This establishes what the system was authorized and preparing to execute before the external state changed.
+
+The intent proof can bind:
+
+* request;
+* authority;
+* candidate action;
+* validation;
+* approval;
+* exact action material;
+* idempotency identity;
+* target;
+* execution time constraints.
+
+---
+
+## 6.5 Outcome Verification
+
+Execution attempt and execution success are different states.
+
+After execution, TenantSage verifies the external outcome.
+
+Only verified outcomes can proceed toward completed execution proof.
+
+---
+
+## 6.6 Idempotency and Replay
+
+Execution must resist duplicate side effects.
+
+A repeated request with the same approved execution identity must not accidentally create a second external action.
+
+Likewise, materially different content cannot be presented under the same execution identity and treated as an ordinary retry.
+
+Replay proof must preserve this distinction.
+
+---
+
+# 7. State, Freshness, and Evidence Integrity
+
+## 7.1 Authority Freshness
+
+Authority is not assumed permanent.
+
+TenantSage binds downstream stages to the authority state used to create them.
+
+If authority has changed materially, stale evidence boundaries must not silently continue operating.
+
+---
+
+## 7.2 Policy Freshness
+
+The same principle applies to governance.
+
+`policyStateHash` and related governance evidence allow downstream components to determine whether the governing state remains valid.
+
+A boundary derived under superseded policy cannot automatically be treated as current.
+
+---
+
+## 7.3 Receipt Lifecycle
+
+Where persisted stage receipts are used, the canonical lifecycle is:
+
+```text
+PENDING
+   ↓
+COMPLETED
+```
+
+or:
+
+```text
+PENDING
+   ↓
+REJECTED
+```
+
+or on unresolved timeout:
+
+```text
+PENDING
+   ↓
+ABANDONED
+```
+
+No `PENDING` means the governed operation was never properly admitted.
+
+No `COMPLETED` governed retrieval means no context or generation may be constructed from that operation.
+
+---
+
+## 7.4 Audit Evidence
+
+TenantSage treats governance evidence as more than ordinary application logging.
+
+The evidence trail must support reconstruction of:
+
+* identity;
+* authority;
+* active scope;
+* policy state;
+* EEB;
+* retrieval;
+* retrieved evidence;
+* governed context;
+* generation;
+* validation;
+* approval;
+* execution intent;
+* external execution;
+* outcome verification;
+* completion proof.
+
+The objective is not merely observability.
+
+It is reconstructability.
+
+---
+
+## 7.5 Hash Binding
+
+Canonical artifacts are hash-bound using deterministic representations.
+
+Hash relationships allow TenantSage to detect:
+
+* artifact substitution;
+* stale authority;
+* stale policy;
+* changed action material;
+* mismatched approval;
+* replay drift;
+* evidence inconsistency.
+
+---
+
+# 8. Failure-Closed Invariants
+
+TenantSage defines the following system properties:
+
+**No Identity → No Authority Resolution.**
+
+**No Authority → No Retrieval.**
+
+**No Active Scope → No Retrieval.**
+
+**No current Authority State → No Retrieval.**
+
+**No Governance Decision → No EEB.**
+
+**No EEB → No Semantic Retrieval.**
+
+**No Eligible Evidence → No Context.**
+
+**No completed Governed Retrieval → No Context.**
+
+**No Governed Evidence → No Generation.**
+
+**No valid ValidationApproval → No S8 Execution.**
+
+**No exact-material match → No Execution.**
+
+**No durable completion proof → No Successful Execution Claim.**
+
+**Cross-customer evidence → Deny.**
+
+**Stale or unverifiable state → Deny.**
+
+These are system properties.
+
+They are not prompt instructions.
+
+The AI cannot waive them.
+
+---
+
+# 9. Relationship of the Original Retrieval Path to Current TenantSage
+
+The TenantSage Real-Time Inheritance Retrieval Path™ remains technically present.
+
+The original mechanism contained:
+
+```text
+Parent-source governance
++
+mandatory source inheritance
++
+scope enforcement
++
+role / visibility enforcement
++
+temporal validity
++
+legal-hold enforcement
++
+whitelist-controlled precedence
++
+vector ranking after governance
+```
+
+That mechanism is now positioned inside the larger architecture.
+
+Current canonical placement:
+
+```text
+S0 Request Ingress
+
+        ↓
+
+S1 Deterministic Authority Resolution
+
+        ↓
+
+S2 Governance Decision
+
+        ↓
+
+S3 Sealed Eligible Evidence Boundary
+
+        ↓
+
+S4 TrustRAG
+   Real-Time Inheritance Retrieval
+   Ghost Effect
+   Parent-Source Governance
+
+        ↓
+
+S5 Governed Context
+
+        ↓
+
+S6 Generation
+
+        ↓
+
+S7 Validation
+
+        ↓
+
+S8 Approval-Bound Execution
+   where external action is required
+```
+
+The earlier architecture has therefore **not been discarded**.
+
+Its technical mechanism remains present as the retrieval enforcement foundation.
+
+Current TenantSage adds:
+
+### Before retrieval
+
+* explicit identity verification;
+* deterministic authority resolution;
+* active scope;
+* governance state;
+* sealed evidence eligibility.
+
+### After retrieval
+
+* governed context;
+* controlled generation;
+* validation;
+* explicit execution approval;
+* exact-material binding;
+* durable intent proof;
+* outcome verification;
+* durable completion proof;
+* replay evidence.
+
+This creates an end-to-end governance chain rather than a retrieval-only governance mechanism.
+
+---
+
+# 10. What Is Claimed — and What Is Not
+
+## 10.1 Explicitly Not Claimed
+
+This document does not claim ownership over the general concepts of:
+
+* AI governance;
+* Retrieval-Augmented Generation;
+* vector search;
+* embeddings;
+* multi-tenancy;
+* legal hold;
+* role-based access control;
+* human approval;
+* audit logging;
+* Row-Level Security.
+
+Those technologies and concepts exist independently of TenantSage.
+
+---
+
+## 10.2 Architectural Selection and Arrangement Recorded Here
+
+This document records the authored selection, arrangement, and choreography of:
+
+* deterministic authority resolution before evidence access;
+* explicit active-scope resolution;
+* governance decision before evidence eligibility;
+* sealed Eligible Evidence Boundary before semantic retrieval;
+* parent-source governance inheritance;
+* the Ghost Effect;
+* customer isolation;
+* deny-precedence evidence eligibility;
+* whitelist-controlled override resolution;
+* governed retrieval;
+* retrieval receipts;
+* separately constructed Governed Context;
+* generation only from governed evidence;
+* validation of generated action material;
+* separation of ValidatedAction from execution authority;
+* ValidationApproval as the authority required for S8;
+* exact-approved-material execution;
+* durable execution intent;
+* outcome verification;
+* durable completion proof;
+* ExecutionReceipt;
+* replay proof;
+* fail-closed response release.
+
+The significance of TenantSage lies in the composition and enforced ordering of these mechanisms rather than ownership of the underlying general technologies.
+
+---
+
+# 11. Visual Specification
+
+## 11.1 Canonical Context
+
+Users, agents, and language models do not directly determine evidence authority.
+
+Governed requests enter through the TenantSage control plane.
+
+```text
+Principal / Agent
+        ↓
+TenantSage Authority & Governance Control Plane
+        ↓
+Eligible Evidence / Governed Tools
+        ↓
+AI Reasoning
+```
+
+The AI remains inside authority established outside itself.
+
+---
+
+## 11.2 Canonical Information Request Flow
+
+```text
+Request
+   ↓
+S0 Request Ingress
+   ↓
+S1 Authority Resolution
+   ↓
+S2 Governance Decision
+   ↓
+S3 Eligible Evidence Boundary
+   ↓
+S4 Governed Retrieval
+   ↓
+S5 Governed Context
+   ↓
+S6 Generation
+   ↓
+S7 Validation
+   ↓
+Verified Response
+```
+
+No S8 execution is required when there is no external action.
+
+---
+
+## 11.3 Canonical Action Flow
+
+```text
+Request
+   ↓
+S0
+   ↓
+S1
+   ↓
+S2
+   ↓
+S3
+   ↓
+S4
+   ↓
+S5
+   ↓
+S6 Candidate Action
+   ↓
+S7 Validation
+   ↓
+ValidatedAction
+   ↓
+Approval Decision
+   ↓
+ValidationApproval
+   ↓
+S8 ExecutionIntent
+   ↓
+Durable Intent Proof
+   ↓
+Exact Approved Execution
+   ↓
+Outcome Verification
+   ↓
+CompletedExecutionReceipt
+   ↓
+Durable Completion Proof
+   ↓
+Final ExecutionReceipt
+   ↓
+Replay Proof
+   ↓
+Release Verified Success
+```
+
+---
+
+## 11.4 Governed Retrieval Component
+
+```text
+Authority State
+      +
+Governance State
+      ↓
+Sealed EEB
+      ↓
+Eligible Source Set
+      ↓
+rag_chunks
+      ×
+rag_sources
+      ↓
+Parent-Source Governance
+      ↓
+Scope / Visibility / Classification
+Temporal / Retention / Legal Hold
+Override Resolution
+      ↓
+Semantic Ranking
+      ↓
+RetrievalReceipt
+```
+
+Similarity does not establish eligibility.
+
+Eligibility establishes what similarity search is permitted to inspect.
+
+---
+
+# 12. Conclusion — Author Statement
+
+TenantSage™ was designed to make authority and governance structural rather than optional.
+
+Its original TenantSage Real-Time Inheritance Retrieval Path™ remains a core technical retrieval mechanism.
+
+The current architecture extends that mechanism into an end-to-end authority, evidence, generation, validation, and execution control plane.
+
+The defining property of TenantSage is not simply that AI can retrieve information or perform actions.
+
+It is that the AI does not control the authority under which those capabilities operate.
+
+The architecture determines:
+
+**Who is making the request?**
+
+**What authority do they possess?**
+
+**What scope is active?**
+
+**What evidence is eligible before semantic retrieval?**
+
+**What governed evidence may enter generation?**
+
+**What proposed action is valid?**
+
+**What exact action has been approved?**
+
+**What may actually execute?**
+
+**Can the resulting outcome be proven?**
+
+The AI can reason.
+
+It can plan.
+
+It can retrieve within an authorized boundary.
+
+It can generate.
+
+It can propose actions.
+
+But it cannot enlarge its own authority.
+
+That boundary is the responsibility of TenantSage.
+
+This document records the intent, structure, technical ancestry, and current canonical choreography of that system.
+
+---
+
+## Copyright Notice
+
+**© 2025–2026 Arthit Pukhampuang. All rights reserved.**
+
+TenantSage™ and TenantSage Real-Time Inheritance Retrieval Path™ are used in this document as marks associated with the authored system and documentation.
+
+This document records architectural, technical, and authorship evidence. It does not itself determine the legal scope or validity of trademark, copyright, patent, or other intellectual-property rights.
