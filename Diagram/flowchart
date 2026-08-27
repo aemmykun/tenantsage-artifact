@@ -1,0 +1,39 @@
+flowchart TD
+    REQUEST["User action request"]
+    AUTH["S0–S2 · Identity, authority, governance"]
+    EVIDENCE["S3–S5 · Eligible evidence and governed context"]
+    CANDIDATE["S6 · Candidate action"]
+    VALIDATION["S7 · Validate action"]
+    VALIDATED["ValidatedAction"]
+    DECISION{"Approval issued?"}
+    REJECT["Fail closed"]
+    APPROVAL["ValidationApproval"]
+    INTENT["S8 · ExecutionIntent"]
+    INTENT_PROOF["Durable intent proof"]
+    EXECUTE["Execute exact approved material"]
+    VERIFY{"Outcome verified?"}
+    FAILURE["Record failure or uncertainty"]
+    COMPLETED["CompletedExecutionReceipt"]
+    COMPLETION_PROOF["Durable completion proof"]
+    RECEIPT["Final ExecutionReceipt"]
+    REPLAY["Replay proof"]
+    RELEASE["Release verified success"]
+
+    REQUEST --> AUTH
+    AUTH --> EVIDENCE
+    EVIDENCE --> CANDIDATE
+    CANDIDATE --> VALIDATION
+    VALIDATION --> VALIDATED
+    VALIDATED --> DECISION
+    DECISION -->|"No"| REJECT
+    DECISION -->|"Yes"| APPROVAL
+    APPROVAL --> INTENT
+    INTENT --> INTENT_PROOF
+    INTENT_PROOF --> EXECUTE
+    EXECUTE --> VERIFY
+    VERIFY -->|"No"| FAILURE
+    VERIFY -->|"Yes"| COMPLETED
+    COMPLETED --> COMPLETION_PROOF
+    COMPLETION_PROOF --> RECEIPT
+    RECEIPT --> REPLAY
+    REPLAY --> RELEASE
